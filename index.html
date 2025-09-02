@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Battle Royale - Week 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .simple-update {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .update-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .update-button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .yahoo-link {
+            background: #6f42c1;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .yahoo-link:hover {
+            background: #5a32a3;
+        }
+
+        .quick-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .quick-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .quick-input label {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .quick-input input {
+            width: 60px;
+            padding: 5px;
+            border: none;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .team-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #6c757d;
+            transition: background 0.3s;
+        }
+
+        .team-card.winner::before {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .team-card.loser::before {
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .team-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .rank-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .winner .score {
+            color: #28a745;
+        }
+
+        .loser .score {
+            color: #dc3545;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .status.safe {
+            background: rgba(40, 167, 69, 0.3);
+            color: #28a745;
+        }
+
+        .status.danger {
+            background: rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+        }
+
+        .cutoff-line {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .cutoff-line::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffc107, transparent);
+        }
+
+        .cutoff-text {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            padding: 6px 16px;
+            border-radius: 15px;
+            display: inline-block;
+            font-weight: bold;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .legend-color.winner {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .legend-color.loser {
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+
+        .last-updated {
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .quick-scores {
+                grid-template-columns: 1fr;
+            }
+            
+            .scoreboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .step {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            background: #28a745;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .instructions {
+            counter-reset: step-counter;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Fantasy Football Battle Royale</h1>
+            <p>Week 1 - Top 6 Get Wins, Bottom 6 Get Losses</p>
+        </div>
+
+        <div class="instructions">
+            <h3 style="margin-bottom: 10px;">📋 How to Update Scores:</h3>
+            <div class="step"><strong>AUTOMATIC:</strong> Click "Setup Auto-Extract" below (one-time setup)</div>
+            <div class="step">Then just click your bookmark on Yahoo Fantasy pages!</div>
+            <div class="step"><strong>MANUAL:</strong> Use "Manual Update" to type scores yourself</div>
+            <div class="step">Everyone else just refreshes this page to see updates!</div>
+        </div>
+
+        <div class="simple-update">
+            <h3 style="margin-bottom: 15px;">🎯 Automatic Score Update</h3>
+            <a href="https://sports.yahoo.com/nfl/gamechannel/?lid=17142" target="_blank" class="update-button yahoo-link">
+                📊 Open Yahoo Fantasy
+            </a>
+            <button class="update-button" onclick="showBookmarkletInstructions()">
+                🤖 Setup Auto-Extract
+            </button>
+            <button class="update-button" onclick="showQuickUpdate()">
+                ⚡ Manual Update
+            </button>
+            
+            <div id="bookmarkletInstructions" style="display: none; margin-top: 20px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+                <h4>🚀 One-Time Setup for Automatic Score Extraction:</h4>
+                <ol style="text-align: left; margin: 15px 0; line-height: 1.6;">
+                    <li>Copy this bookmarklet code:</li>
+                </ol>
+                <textarea id="bookmarkletCode" readonly style="width: 100%; height: 100px; margin: 10px 0; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.8rem; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.3);">Loading bookmarklet code...</textarea>
+                <ol start="2" style="text-align: left; margin: 15px 0; line-height: 1.6;">
+                    <li><strong>Create a bookmark:</strong>
+                        <ul style="margin: 5px 0 10px 20px; font-size: 0.9rem;">
+                            <li><strong>Chrome/Edge:</strong> Ctrl+Shift+O → "Add new bookmark"</li>
+                            <li><strong>Safari:</strong> Bookmarks menu → "Add Bookmark"</li>
+                            <li><strong>Firefox:</strong> Ctrl+Shift+B → "Add Bookmark"</li>
+                            <li><strong>Or:</strong> Bookmark any page, then edit it</li>
+                        </ul>
+                    </li>
+                    <li>Name: "Extract Fantasy Scores"</li>
+                    <li>URL: Paste the code above (replace the normal URL)</li>
+                    <li>Save the bookmark</li>
+                </ol>
+                <div style="margin: 15px 0; padding: 15px; background: rgba(40, 167, 69, 0.2); border-radius: 10px; border: 2px dashed #28a745;">
+                    <p style="font-weight: bold; color: #28a745; margin-bottom: 10px;">
+                        🎯 DRAG THIS LINK TO YOUR BOOKMARK BAR:
+                    </p>
+                    <a href="javascript:void(0)" onclick="return false" id="dragBookmarklet" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; display: inline-block;">
+                        📊 Extract Fantasy Scores
+                    </a>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: #28a745;">
+                        ✅ Then: Go to Yahoo Fantasy → Click the bookmark → Scores auto-update here!
+                    </p>
+                </div>
+                <button class="update-button" onclick="hideBookmarkletInstructions()" style="background: #6c757d;">
+                    ❌ Close
+                </button>
+            </div>
+            
+            <div id="quickUpdate" style="display: none; margin-top: 20px;">
+                <div class="quick-scores" id="quickScores">
+                    <!-- Quick score inputs will be generated here -->
+                </div>
+                <button class="update-button" onclick="saveQuickScores()">
+                    💾 Update Battle Royale
+                </button>
+                <button class="update-button" onclick="hideQuickUpdate()" style="background: #6c757d;">
+                    ❌ Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="scoreboard" id="scoreboard">
+            <!-- Team cards will be populated here -->
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color winner"></div>
+                <span>Top 6 Teams - Win (1-0)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color loser"></div>
+                <span>Bottom 6 Teams - Loss (0-1)</span>
+            </div>
+        </div>
+
+        <div class="last-updated" id="lastUpdated">
+            Last updated: Never
+        </div>
+    </div>
+
+    <script>
+        // Your league's team data - UPDATE THESE WITH REAL TEAM NAMES
+        let teamsData = [
+            { name: "Team Alpha", score: 0 },
+            { name: "Team Beta", score: 0 },
+            { name: "Team Gamma", score: 0 },
+            { name: "Team Delta", score: 0 },
+            { name: "Team Epsilon", score: 0 },
+            { name: "Team Zeta", score: 0 },
+            { name: "Team Eta", score: 0 },
+            { name: "Team Theta", score: 0 },
+            { name: "Team Iota", score: 0 },
+            { name: "Team Kappa", score: 0 },
+            { name: "Team Lambda", score: 0 },
+            { name: "Team Mu", score: 0 }
+        ];
+
+        function loadData() {
+            const saved = localStorage.getItem('simpleBattleRoyaleData');
+            if (saved) {
+                try {
+                    const savedData = JSON.parse(saved);
+                    if (savedData.teams && savedData.timestamp) {
+                        teamsData = savedData.teams;
+                        document.getElementById('lastUpdated').textContent = 
+                            `Last updated: ${new Date(savedData.timestamp).toLocaleString()}`;
+                    }
+                } catch (e) {
+                    console.log('Error loading data:', e);
+                }
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const sortedTeams = [...teamsData].sort((a, b) => b.score - a.score);
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = '';
+
+            sortedTeams.forEach((team, index) => {
+                const rank = index + 1;
+                const isWinner = rank <= 6;
+
+                const teamCard = document.createElement('div');
+                teamCard.className = `team-card ${isWinner ? 'winner' : 'loser'}`;
+                
+                teamCard.innerHTML = `
+                    <div class="team-header">
+                        <div class="team-name">${team.name}</div>
+                        <div class="rank-badge">#${rank}</div>
+                    </div>
+                    <div class="score">${team.score.toFixed(1)}</div>
+                    <div class="status ${isWinner ? 'safe' : 'danger'}">
+                        ${isWinner ? '✅ WIN (1-0)' : '❌ LOSS (0-1)'}
+                    </div>
+                `;
+                
+                scoreboard.appendChild(teamCard);
+
+                // Add cutoff line after 6th team
+                if (rank === 6 && index < sortedTeams.length - 1) {
+                    const cutoffLine = document.createElement('div');
+                    cutoffLine.className = 'cutoff-line';
+                    cutoffLine.innerHTML = '<div class="cutoff-text">WIN/LOSS CUTOFF</div>';
+                    scoreboard.appendChild(cutoffLine);
+                }
+            });
+        }
+
+        function showQuickUpdate() {
+            const quickUpdate = document.getElementById('quickUpdate');
+            const quickScores = document.getElementById('quickScores');
+            
+            quickScores.innerHTML = teamsData.map((team, index) => `
+                <div class="quick-input">
+                    <label>${team.name}:</label>
+                    <input type="number" 
+                           id="score-${index}" 
+                           value="${team.score}" 
+                           step="0.1" 
+                           min="0"
+                           placeholder="0.0">
+                </div>
+            `).join('');
+            
+            quickUpdate.style.display = 'block';
+        }
+
+        function hideQuickUpdate() {
+            document.getElementById('quickUpdate').style.display = 'none';
+        }
+
+        function saveQuickScores() {
+            let hasChanges = false;
+            
+            teamsData.forEach((team, index) => {
+                const input = document.getElementById(`score-${index}`);
+                const newScore = parseFloat(input.value) || 0;
+                
+                if (newScore !== team.score) {
+                    hasChanges = true;
+                    team.score = newScore;
+                }
+            });
+            
+            if (hasChanges) {
+                const dataToSave = {
+                    teams: teamsData,
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem('simpleBattleRoyaleData', JSON.stringify(dataToSave));
+                
+                updateDisplay();
+                document.getElementById('lastUpdated').textContent = 
+                    `Last updated: ${new Date().toLocaleString()}`;
+                
+                // Show success message
+                showNotification('✅ Battle Royale updated! Tell your league to refresh the page.');
+            }
+            
+            hideQuickUpdate();
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(40, 167, 69, 0.95);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 25px;
+                z-index: 1000;
+                font-weight: bold;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                animation: slideDown 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            if (!document.getElementById('notificationStyles')) {
+                const style = document.createElement('style');
+                style.id = 'notificationStyles';
+                style.textContent = `
+                    @keyframes slideDown {
+                        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideDown 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Auto-refresh for league members (not the admin)
+        setInterval(() => {
+            const currentData = JSON.stringify(teamsData);
+            loadData();
+            const newData = JSON.stringify(teamsData);
+            
+            if (currentData !== newData) {
+                showNotification('🔄 Scores updated! New battle royale standings loaded.');
+            }
+        }, 10000); // Check every 10 seconds
+
+        function showBookmarkletInstructions() {
+            const instructions = document.getElementById('bookmarkletInstructions');
+            const codeTextarea = document.getElementById('bookmarkletCode');
+            
+            // Load the bookmarklet code
+            const bookmarkletCode = `javascript:(function(){
+    console.log('🏈 Starting Yahoo Fantasy Auto Extractor...');
+    
+    function extractFantasyScores() {
+        const teams = [];
+        let extractionMethod = 'unknown';
+        
+        console.log('🔍 Analyzing page structure...');
+        
+        // Method 1: Look for Yahoo's standard fantasy elements
+        const matchupElements = document.querySelectorAll('[data-testid*="matchup"], [class*="matchup"], .matchup');
+        console.log(\`Found \${matchupElements.length} potential matchup elements\`);
+        
+        if (matchupElements.length > 0) {
+            extractionMethod = 'matchup-elements';
+            matchupElements.forEach((matchup, index) => {
+                const teamElements = matchup.querySelectorAll('[data-testid*="team"], [class*="team"], .team');
+                
+                teamElements.forEach(teamEl => {
+                    const nameEl = teamEl.querySelector('[class*="name"], [class*="title"], .team-name, .manager-name');
+                    const scoreEl = teamEl.querySelector('[class*="score"], [class*="points"], .score, .points');
+                    
+                    if (nameEl && scoreEl) {
+                        const name = nameEl.textContent.trim();
+                        const scoreText = scoreEl.textContent.trim();
+                        const score = parseFloat(scoreText.replace(/[^\\d.]/g, ''));
+                        
+                        if (name && !isNaN(score) && score >= 0) {
+                            teams.push({
+                                name: name,
+                                score: score,
+                                source: \`matchup-\${index}\`
+                            });
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Method 2: Look for score patterns in the entire page
+        if (teams.length === 0) {
+            extractionMethod = 'pattern-matching';
+            console.log('🔍 Trying pattern matching approach...');
+            
+            const allElements = document.querySelectorAll('*');
+            const scoreElements = [];
+            
+            allElements.forEach(el => {
+                const text = el.textContent;
+                if (text && text.match(/^\\d+\\.\\d+$/) && el.offsetParent) {
+                    const score = parseFloat(text);
+                    if (score > 0 && score < 300) {
+                        scoreElements.push({
+                            element: el,
+                            score: score,
+                            text: text
+                        });
+                    }
+                }
+            });
+            
+            console.log(\`Found \${scoreElements.length} potential score elements\`);
+            
+            scoreElements.forEach(scoreData => {
+                const scoreEl = scoreData.element;
+                let teamName = null;
+                
+                let current = scoreEl;
+                for (let i = 0; i < 10 && current; i++) {
+                    current = current.parentElement;
+                    if (current) {
+                        const nameEl = current.querySelector('[class*="name"], [class*="title"], [class*="manager"], [data-testid*="name"]');
+                        if (nameEl && nameEl.textContent.trim().length > 2) {
+                            teamName = nameEl.textContent.trim();
+                            break;
+                        }
+                    }
+                }
+                
+                if (!teamName) {
+                    teamName = \`Team \${teams.length + 1}\`;
+                }
+                
+                teams.push({
+                    name: teamName,
+                    score: scoreData.score,
+                    source: 'pattern-match'
+                });
+            });
+        }
+        
+        const uniqueTeams = [];
+        const seenNames = new Set();
+        
+        teams.forEach(team => {
+            if (!seenNames.has(team.name) && team.name.length > 1) {
+                seenNames.add(team.name);
+                uniqueTeams.push(team);
+            }
+        });
+        
+        console.log(\`✅ Extracted \${uniqueTeams.length} teams using method: \${extractionMethod}\`);
+        return uniqueTeams;
+    }
+    
+    async function main() {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const extractedTeams = extractFantasyScores();
+            
+            if (extractedTeams.length > 0) {
+                const dataToStore = {
+                    teams: extractedTeams.map(team => ({
+                        name: team.name,
+                        score: team.score
+                    })),
+                    timestamp: Date.now(),
+                    source: 'yahoo_auto_extractor',
+                    url: window.location.href,
+                    extractionCount: extractedTeams.length
+                };
+                
+                localStorage.setItem('simpleBattleRoyaleData', JSON.stringify(dataToStore));
+                sessionStorage.setItem('simpleBattleRoyaleData', JSON.stringify(dataToStore));
+                
+                const message = \`🎉 SUCCESS! Extracted \${extractedTeams.length} teams!\\n\\n\` +
+                               \`Teams found:\\n\${extractedTeams.slice(0, 6).map(t => \`• \${t.name}: \${t.score.toFixed(1)}\`).join('\\n')}\` +
+                               (extractedTeams.length > 6 ? \`\\n...and \${extractedTeams.length - 6} more\` : '') +
+                               \`\\n\\nData saved! Switch to your Battle Royale tracker tab to see the update.\`;
+                
+                alert(message);
+                
+                console.log('🏆 Data stored successfully:', dataToStore);
+                
+            } else {
+                const currentUrl = window.location.href;
+                const pageTitle = document.title;
+                
+                let helpMessage = \`❌ Could not extract scores from this page.\\n\\n\`;
+                helpMessage += \`Current page: \${pageTitle}\\n\`;
+                helpMessage += \`URL: \${currentUrl}\\n\\n\`;
+                helpMessage += \`Troubleshooting:\\n\`;
+                helpMessage += \`• Make sure you're on the Yahoo Fantasy GameChannel page\\n\`;
+                helpMessage += \`• Try waiting for the page to fully load, then run again\\n\`;
+                helpMessage += \`• Check that scores are visible on the page\\n\`;
+                helpMessage += \`• Try refreshing the page and running the bookmarklet again\`;
+                
+                alert(helpMessage);
+            }
+            
+        } catch (error) {
+            console.error('Error in auto extractor:', error);
+            alert(\`❌ Error extracting scores: \${error.message}\\n\\nPlease try again or use manual score entry.\`);
+        }
+    }
+    
+    main();
+})();`;
+            
+            codeTextarea.value = bookmarkletCode;
+            
+            // Set up the draggable bookmarklet link
+            const dragLink = document.getElementById('dragBookmarklet');
+            dragLink.href = bookmarkletCode;
+            
+            instructions.style.display = 'block';
+        }
+
+        function hideBookmarkletInstructions() {
+            document.getElementById('bookmarkletInstructions').style.display = 'none';
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadData();
+        };
+    </script>
+</body>
+</html>
