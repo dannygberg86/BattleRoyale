@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Football Battle Royale - Auto Yahoo Sync</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .yahoo-sync-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .yahoo-sync-section h3 {
+            margin-top: 0;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+        
+        .status-disconnected {
+            background: #f44336;
+        }
+        
+        .status-syncing {
+            background: #FF9800;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .sync-instructions {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #FFC107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        
+        .sync-instructions ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        
+        .sync-instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: #2196F3;
+        }
+        
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+        }
+        
+        .btn-warning:hover {
+            background: #F57C00;
+        }
+        
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .auto-sync-controls {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .auto-sync-controls label {
+            margin: 0 15px;
+            cursor: pointer;
+        }
+        
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .team-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 5px solid;
+            transition: transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .team-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .team-card.winner {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .team-card.loser {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+        
+        .team-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .team-score {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .team-rank {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        
+        .status-win {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-loss {
+            background: #f44336;
+            color: white;
+        }
+        
+        .summary {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .summary h3 {
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        
+        .cutoff-line {
+            border-top: 3px dashed #FFD700;
+            margin: 20px 0;
+            position: relative;
+            grid-column: 1 / -1;
+        }
+        
+        .cutoff-label {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFD700;
+            color: #1e3c72;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #c8e6c9;
+            text-align: center;
+        }
+        
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #ffcdd2;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .yahoo-iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            margin: 15px 0;
+        }
+        
+        .extraction-helper {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .copy-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .copy-button:hover {
+            background: #1976D2;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Fantasy Football Battle Royale 🏆</h1>
+        <div class="subtitle">Week 1 - Auto-Sync with Yahoo Fantasy</div>
+        
+        <!-- Yahoo Sync Section -->
+        <div class="yahoo-sync-section">
+            <h3>🔗 Yahoo Fantasy Auto-Sync</h3>
+            
+            <div class="sync-status">
+                <span class="status-indicator" id="syncStatus"></span>
+                <span id="syncStatusText">Not Connected</span>
+                <span id="lastSyncTime"></span>
+            </div>
+            
+            <div class="sync-instructions">
+                <h4>🚀 One-Time Setup (Super Easy!):</h4>
+                <ol>
+                    <li><strong>Open Yahoo Fantasy</strong> in a new tab: <a href="https://football.fantasysports.yahoo.com/f1/17142" target="_blank" style="color: #FFD700;">Your League Page</a></li>
+                    <li><strong>Come back here</strong> and click "Start Auto-Sync"</li>
+                    <li><strong>Follow the simple prompts</strong> - no technical skills needed!</li>
+                    <li><strong>Enjoy automatic updates</strong> every minute!</li>
+                </ol>
+                <p><strong>💡 Tip:</strong> Keep both tabs open for best results!</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-large btn-primary" id="startSyncBtn" onclick="startAutoSync()">
+                    🚀 Start Auto-Sync with Yahoo
+                </button>
+                <button class="btn btn-large" id="manualSyncBtn" onclick="manualSync()" disabled>
+                    🔄 Manual Sync Now
+                </button>
+                <button class="btn btn-large btn-warning" onclick="showExtractionHelper()">
+                    🛠️ Need Help? Click Here
+                </button>
+            </div>
+            
+            <div class="auto-sync-controls">
+                <label>
+                    <input type="checkbox" id="autoSyncEnabled" onchange="toggleAutoSync()">
+                    Enable Auto-Sync (updates automatically)
+                </label>
+                <br><br>
+                <label>
+                    <input type="radio" name="syncInterval" value="60" checked onchange="updateSyncInterval(60)">
+                    Every 1 minute
+                </label>
+                <label>
+                    <input type="radio" name="syncInterval" value="120" onchange="updateSyncInterval(120)">
+                    Every 2 minutes
+                </label>
+                <label>
+                    <input type="radio" name="syncInterval" value="300" onchange="updateSyncInterval(300)">
+                    Every 5 minutes
+                </label>
+            </div>
+        </div>
+        
+        <!-- Extraction Helper (Hidden by default) -->
+        <div class="extraction-helper hidden" id="extractionHelper">
+            <h4>🛠️ Data Extraction Helper</h4>
+            <p>If auto-sync isn't working, follow these steps:</p>
+            
+            <p><strong>Step 1:</strong> Copy this code:</p>
+            <div class="code-block" id="extractionCode">
+// Yahoo Fantasy Data Extractor - Paste this in Yahoo's console
+(function() {
+    console.log('🏆 Extracting Fantasy Data...');
+    
+    const teams = [];
+    
+    // Strategy 1: Look for table rows
+    document.querySelectorAll('tr').forEach(row => {
+        const cells = row.querySelectorAll('td, th');
+        if (cells.length >= 2) {
+            let name = '', score = 0;
+            
+            Array.from(cells).forEach(cell => {
+                const text = cell.textContent.trim();
+                if (text.length > 2 && !text.match(/^\d+\.?\d*$/) && !name) {
+                    name = text;
+                }
+                const scoreMatch = text.match(/(\d+\.?\d*)/);
+                if (scoreMatch && parseFloat(scoreMatch[1]) > 0) {
+                    score = parseFloat(scoreMatch[1]);
+                }
+            });
+            
+            if (name && score > 0 && teams.length < 12) {
+                teams.push({name, score, owner: ''});
+            }
+        }
+    });
+    
+    // Strategy 2: Look for divs with team data
+    if (teams.length === 0) {
+        document.querySelectorAll('div').forEach(div => {
+            const text = div.textContent.trim();
+            const match = text.match(/([A-Za-z\s']{3,30})\s*(\d+\.?\d*)/);
+            if (match && teams.length < 12) {
+                teams.push({
+                    name: match[1].trim(),
+                    score: parseFloat(match[2]),
+                    owner: ''
+                });
+            }
+        });
+    }
+    
+    if (teams.length > 0) {
+        localStorage.setItem('yahooFantasyData', JSON.stringify(teams));
+        console.log('✅ Success! Found ' + teams.length + ' teams');
+        console.table(teams);
+        alert('Success! Found ' + teams.length + ' teams. Go back to Battle Royale page.');
+        
+        // Also try to communicate with the other tab
+        try {
+            window.postMessage({type: 'YAHOO_DATA', teams: teams}, '*');
+        } catch(e) {}
+    } else {
+        alert('No team data found. Make sure you are on the league standings or matchup page.');
+    }
+})();
+            </div>
+            <button class="copy-button" onclick="copyExtractionCode()">📋 Copy Code</button>
+            
+            <p><strong>Step 2:</strong> Go to your Yahoo Fantasy page, press F12, go to Console tab, paste the code, and press Enter.</p>
+            <p><strong>Step 3:</strong> Come back here and click "Check for Data"</p>
+            
+            <button class="btn" onclick="checkForExtractedData()">🔍 Check for Data</button>
+        </div>
+        
+        <!-- Message Area -->
+        <div id="messageArea"></div>
+        
+        <!-- Teams Display -->
+        <div class="teams-grid" id="teamsGrid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; opacity: 0.7;">
+                Click "Start Auto-Sync" above to automatically pull data from Yahoo Fantasy!
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="summary">
+            <h3>📊 Battle Royale Status</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="winCount">0</div>
+                    <div class="stat-label">Teams with WINS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lossCount">0</div>
+                    <div class="stat-label">Teams with LOSSES</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cutoffScore">0.00</div>
+                    <div class="stat-label">Cutoff Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTeams">0</div>
+                    <div class="stat-label">Total Teams</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let teams = [];
+        let autoSyncInterval = null;
+        let syncIntervalSeconds = 60;
+        let isAutoSyncEnabled = false;
+        let lastSyncTime = null;
+
+        // Initialize
+        function init() {
+            updateSyncStatus('disconnected', 'Not Connected');
+            loadSavedData();
+            
+            // Listen for messages from Yahoo tab
+            window.addEventListener('message', handleYahooMessage);
+            
+            // Listen for storage events (cross-tab communication)
+            window.addEventListener('storage', handleStorageEvent);
+            
+            // Check for existing data
+            checkForExtractedData();
+        }
+
+        // Start auto-sync process
+        function startAutoSync() {
+            showMessage('Starting auto-sync with Yahoo Fantasy...', 'info');
+            updateSyncStatus('syncing', 'Connecting...');
+            
+            // Check if Yahoo tab is open
+            const yahooUrl = 'https://football.fantasysports.yahoo.com/f1/17142';
+            
+            // Try to communicate with Yahoo tab
+            tryYahooSync();
+            
+            // Enable manual sync button
+            document.getElementById('manualSyncBtn').disabled = false;
+            document.getElementById('startSyncBtn').textContent = '🔄 Restart Auto-Sync';
+        }
+
+        // Try to sync with Yahoo
+        function tryYahooSync() {
+            // Check for data in localStorage (from Yahoo tab)
+            const yahooData = localStorage.getItem('yahooFantasyData');
+            
+            if (yahooData) {
+                try {
+                    const data = JSON.parse(yahooData);
+                    if (Array.isArray(data) && data.length > 0) {
+                        processYahooData(data);
+                        updateSyncStatus('connected', 'Connected to Yahoo Fantasy');
+                        showMessage('Successfully synced with Yahoo Fantasy!', 'success');
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Error parsing Yahoo data:', e);
+                }
+            }
+            
+            // If no data found, show instructions
+            updateSyncStatus('disconnected', 'Waiting for Yahoo data...');
+            showMessage('Please follow the setup instructions above to connect with Yahoo Fantasy.', 'info');
+            return false;
+        }
+
+        // Manual sync
+        function manualSync() {
+            updateSyncStatus('syncing', 'Syncing...');
+            
+            if (tryYahooSync()) {
+                showMessage('Manual sync completed successfully!', 'success');
+            } else {
+                showMessage('No Yahoo data found. Please extract data from Yahoo first.', 'error');
+                updateSyncStatus('disconnected', 'No data available');
+            }
+        }
+
+        // Process Yahoo data
+        function processYahooData(data) {
+            teams = data.map((team, index) => ({
+                name: team.name || `Team ${index + 1}`,
+                score: parseFloat(team.score) || 0,
+                owner: team.owner || '',
+                rank: 0,
+                status: ''
+            }));
+            
+            updateRankings();
+            saveData();
+            lastSyncTime = new Date();
+            updateLastSyncTime();
+        }
+
+        // Update rankings
+        function updateRankings() {
+            // Sort teams by score (highest first)
+            teams.sort((a, b) => b.score - a.score);
+            
+            // Add rankings and status
+            teams.forEach((team, index) => {
+                team.rank = index + 1;
+                team.status = index < 6 ? 'win' : 'loss';
+            });
+            
+            renderTeams();
+            updateSummary();
+        }
+
+        // Render teams
+        function renderTeams() {
+            const grid = document.getElementById('teamsGrid');
+            grid.innerHTML = '';
+
+            if (teams.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; opacity: 0.7;">
+                        Click "Start Auto-Sync" above to automatically pull data from Yahoo Fantasy!
+                    </div>
+                `;
+                return;
+            }
+
+            teams.forEach((team, index) => {
+                const isWinner = team.status === 'win';
+                const teamCard = document.createElement('div');
+                teamCard.className = `team-card ${isWinner ? 'winner' : 'loser'}`;
+
+                teamCard.innerHTML = `
+                    <div class="team-name">${team.name}</div>
+                    <div class="team-score">${team.score.toFixed(1)}</div>
+                    <div class="team-rank">Rank #${team.rank}</div>
+                    <div class="status-badge ${isWinner ? 'status-win' : 'status-loss'}">
+                        ${isWinner ? '✅ WIN' : '❌ LOSS'}
+                    </div>
+                `;
+
+                grid.appendChild(teamCard);
+
+                // Add cutoff line after 6th team
+                if (index === 5 && teams.length > 6) {
+                    const cutoffLine = document.createElement('div');
+                    cutoffLine.className = 'cutoff-line';
+                    cutoffLine.innerHTML = '<div class="cutoff-label">WIN/LOSS CUTOFF</div>';
+                    grid.appendChild(cutoffLine);
+                }
+            });
+        }
+
+        // Update summary
+        function updateSummary() {
+            const winners = teams.filter(t => t.status === 'win').length;
+            const losers = teams.filter(t => t.status === 'loss').length;
+            const cutoff = teams.length >= 7 ? teams[6].score : 0;
+
+            document.getElementById('winCount').textContent = winners;
+            document.getElementById('lossCount').textContent = losers;
+            document.getElementById('cutoffScore').textContent = cutoff.toFixed(1);
+            document.getElementById('totalTeams').textContent = teams.length;
+        }
+
+        // Auto-sync controls
+        function toggleAutoSync() {
+            isAutoSyncEnabled = document.getElementById('autoSyncEnabled').checked;
+            
+            if (isAutoSyncEnabled) {
+                startAutoSyncInterval();
+                showMessage(`Auto-sync enabled (every ${syncIntervalSeconds} seconds)`, 'success');
+            } else {
+                stopAutoSyncInterval();
+                showMessage('Auto-sync disabled', 'success');
+            }
+        }
+
+        function startAutoSyncInterval() {
+            if (autoSyncInterval) {
+                clearInterval(autoSyncInterval);
+            }
+            
+            autoSyncInterval = setInterval(() => {
+                manualSync();
+            }, syncIntervalSeconds * 1000);
+        }
+
+        function stopAutoSyncInterval() {
+            if (autoSyncInterval) {
+                clearInterval(autoSyncInterval);
+                autoSyncInterval = null;
+            }
+        }
+
+        function updateSyncInterval(seconds) {
+            syncIntervalSeconds = seconds;
+            
+            if (isAutoSyncEnabled) {
+                stopAutoSyncInterval();
+                startAutoSyncInterval();
+            }
+        }
+
+        // Helper functions
+        function updateSyncStatus(status, text) {
+            const indicator = document.getElementById('syncStatus');
+            const statusText = document.getElementById('syncStatusText');
+            
+            indicator.className = `status-indicator status-${status}`;
+            statusText.textContent = text;
+        }
+
+        function updateLastSyncTime() {
+            if (lastSyncTime) {
+                document.getElementById('lastSyncTime').textContent = 
+                    `(Last sync: ${lastSyncTime.toLocaleTimeString()})`;
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            
+            messageArea.innerHTML = `<div class="${messageClass}">${message}</div>`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        function showExtractionHelper() {
+            const helper = document.getElementById('extractionHelper');
+            helper.classList.toggle('hidden');
+        }
+
+        function copyExtractionCode() {
+            const code = document.getElementById('extractionCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showMessage('Code copied to clipboard!', 'success');
+            }).catch(() => {
+                showMessage('Please manually copy the code above', 'error');
+            });
+        }
+
+        function checkForExtractedData() {
+            const yahooData = localStorage.getItem('yahooFantasyData');
+            if (yahooData) {
+                try {
+                    const data = JSON.parse(yahooData);
+                    if (Array.isArray(data) && data.length > 0) {
+                        processYahooData(data);
+                        updateSyncStatus('connected', 'Connected to Yahoo Fantasy');
+                        showMessage(`Found ${data.length} teams from Yahoo Fantasy!`, 'success');
+                        document.getElementById('manualSyncBtn').disabled = false;
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Error parsing stored data:', e);
+                }
+            }
+            return false;
+        }
+
+        // Event handlers
+        function handleYahooMessage(event) {
+            if (event.data && event.data.type === 'YAHOO_DATA') {
+                processYahooData(event.data.teams);
+                updateSyncStatus('connected', 'Connected to Yahoo Fantasy');
+                showMessage('Received data from Yahoo Fantasy tab!', 'success');
+            }
+        }
+
+        function handleStorageEvent(event) {
+            if (event.key === 'yahooFantasyData' && event.newValue) {
+                try {
+                    const data = JSON.parse(event.newValue);
+                    processYahooData(data);
+                    updateSyncStatus('connected', 'Connected to Yahoo Fantasy');
+                    showMessage('Auto-updated from Yahoo Fantasy!', 'success');
+                } catch (e) {
+                    console.error('Error processing storage event:', e);
+                }
+            }
+        }
+
+        // Data persistence
+        function saveData() {
+            const data = {
+                teams: teams,
+                lastSync: lastSyncTime ? lastSyncTime.toISOString() : null,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('fantasyBattleRoyaleAuto', JSON.stringify(data));
+        }
+
+        function loadSavedData() {
+            const savedData = localStorage.getItem('fantasyBattleRoyaleAuto');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    if (data.teams && Array.isArray(data.teams)) {
+                        teams = data.teams;
+                        if (data.lastSync) {
+                            lastSyncTime = new Date(data.lastSync);
+                            updateLastSyncTime();
+                        }
+                        updateRankings();
+                    }
+                } catch (e) {
+                    console.error('Error loading saved data:', e);
+                }
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoSyncInterval) {
+                clearInterval(autoSyncInterval);
+            }
+            saveData();
+        });
+    </script>
+</body>
+</html>
